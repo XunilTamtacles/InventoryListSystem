@@ -1,6 +1,7 @@
-using Inventory_List_System.Models.Repositories.Inventories;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Inventory_List_System.Models.Database;
+using Inventory_List_System.Models.Repositories.Inventories;
+using Inventory_List_System.Models.Repositories.Users;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -15,7 +16,11 @@ namespace Inventory_List_System
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-        
+            builder.Services.AddDbContext<InventoryDbContext>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+            builder.Services.AddHttpContextAccessor();
+
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                .AddCookie(options =>
                {
@@ -38,8 +43,8 @@ namespace Inventory_List_System
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
             app.UseRouting();
-            
             app.UseAuthentication();
             app.UseAuthorization();
 

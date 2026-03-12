@@ -1,94 +1,53 @@
-﻿
-using Inventory_List_System.Models.Database;
-using Inventory_List_System.Models.Repositories.Users;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using System.Text;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Inventory_List_System.Models.Repositories.Users;
+using Inventory_List_System.Models.Database;
+using Inventory_List_System.Controllers.helper;
 
-namespace Inventory_List_System.Controllers
+public class AccountController : Controller
 {
-    public class AccountsController : Controller
+    private readonly IUserRepository _userRepository;
+    public AccountController(IUserRepository userRepository) => _userRepository = userRepository;
+
+    public IActionResult Register() => View();
+    [HttpPost]
+    public IActionResult Register(string username, string password)
     {
-        private readonly IUserRepository _userRepository;
-
-        public AccountsController(IUserRepository userRepository)
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            _userRepository = userRepository;
-        }
-
-        public IActionResult Register()
-        {
+            ModelState.AddModelError("", "Username and password required");
             return View();
         }
 
-        [HttpPost]
-        public IActionResult Register(string username, string password)
+        if (_userRepository.UsernameExists(username))
         {
-            if (_userRepository.UsernameExists(username))
-            {
-                ViewBag.Error = "Username already exists";
-                return View();
-            }
-
-            string hash = HashPassword(password);
-
-            User user = new User
-            {
-                Username = username,
-                PasswordHash = hash
-            };
-
-            _userRepository.AddUser(user);
-
-            return RedirectToAction("Login");
-        }
-
-        public IActionResult Login()
-        {
+            ModelState.AddModelError("", "Username exists");
             return View();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Login(string username, string password)
-        {
-            string hash = HashPassword(password);
+        _userRepository.AddUser(new User { Username = username, PasswordHash = password });
+        return RedirectToAction("Login");
+    }
 
-            var user = _userRepository.ValidateUser(username, hash);
+    public IActionResult Login() => View();
+    [HttpPost]
+    public async Task<IActionResult> Login(string username, string password)
+    {
+        var user = _userRepository.ValidateUser(username, password);
+        if (user == null) { ModelState.AddModelError("", "Invalid credentials"); return View(); }
 
-            if (user == null)
-            {
-                ViewBag.Error = "Invalid login";
-                return View();
-            }
+        var claims = new List<Claim> { new Claim(ClaimTypes.Name, user.Username), new Claim("UserId", user.Id.ToString()) };
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
+        return RedirectToAction("Index", "Inventory");
+    }
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username)
-            };
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(identity));
-
-            return RedirectToAction("Index", "Inventory");
-        }
-
-        private string HashPassword(string password)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<IActionResult> Logout()
-        {
-            await HttpContext.SignOutAsync();
-            return RedirectToAction("Login");
-        }
-
-
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction("Login");
     }
 }
