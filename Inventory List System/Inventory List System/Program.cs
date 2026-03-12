@@ -1,4 +1,11 @@
+using Inventory_List_System.Models.Repositories.Inventories;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Inventory_List_System.Models.Database;
+using Microsoft.EntityFrameworkCore;
+
+
 namespace Inventory_List_System
+   
 {
     public class Program
     {
@@ -8,8 +15,19 @@ namespace Inventory_List_System
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+        
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+               .AddCookie(options =>
+               {
+                   options.LoginPath = "/Accounts/Login";
+                   options.AccessDeniedPath = "/Accounts/AccessDenied";
+                   options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                   options.SlidingExpiration = true;
+               });
+     
 
             var app = builder.Build();
+            
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
@@ -21,7 +39,8 @@ namespace Inventory_List_System
 
             app.UseHttpsRedirection();
             app.UseRouting();
-
+            
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapStaticAssets();
@@ -31,6 +50,8 @@ namespace Inventory_List_System
                 .WithStaticAssets();
 
             app.Run();
+
+
         }
     }
 }
