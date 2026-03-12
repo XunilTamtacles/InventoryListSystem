@@ -22,14 +22,14 @@ namespace Inventory_List_System
             builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-               .AddCookie(options =>
-               {
-                   options.LoginPath = "/Accounts/Login";
-                   options.AccessDeniedPath = "/Accounts/AccessDenied";
-                   options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-                   options.SlidingExpiration = true;
-               });
-     
+       .AddCookie(options =>
+       {
+           options.LoginPath = "/Account/Login"; // must match controller name
+           options.AccessDeniedPath = "/Account/Login";
+           options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+           options.SlidingExpiration = true;
+       });
+
 
             var app = builder.Build();
             
