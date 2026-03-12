@@ -2,7 +2,7 @@
 
 namespace Inventory_List_System.Models.Repositories.Users
 {
- 
+
     public class UserRepository : IUserRepository
     {
         private readonly InventoryDbContext _context;
@@ -13,14 +13,10 @@ namespace Inventory_List_System.Models.Repositories.Users
         }
 
         public User GetByUsername(string username)
-        {
-            return _context.Users.FirstOrDefault(u => u.Username == username);
-        }
+            => _context.Users.FirstOrDefault(u => u.Username == username);
 
         public bool UsernameExists(string username)
-        {
-            return _context.Users.Any(u => u.Username == username);
-        }
+            => _context.Users.Any(u => u.Username == username);
 
         public void AddUser(User user)
         {
@@ -28,9 +24,12 @@ namespace Inventory_List_System.Models.Repositories.Users
             _context.SaveChanges();
         }
 
-        public User ValidateUser(string username, string passwordHash)
+        public User ValidateUser(string username, string password)
         {
-            return _context.Users.FirstOrDefault(u => u.Username == username && u.PasswordHash == passwordHash);
+            var user = _context.Users.FirstOrDefault(u => u.Username == username);
+            if (user != null && PasswordHelper.VerifyPassword(password, user.PasswordHash))
+                return user;
+            return null;
         }
     }
 }
