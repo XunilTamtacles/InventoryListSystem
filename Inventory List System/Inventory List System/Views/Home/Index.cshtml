@@ -1,15 +1,21 @@
 ﻿@model List<Inventory_List_System.Models.Database.InventoryItem>
 
 @{
-    ViewBag.Title = "Inventory System";
-    int totalPages = (int)Math.Ceiling((double)ViewBag.TotalItems / ViewBag.PageSize);
+    ViewBag.Title = "Inventory";
+
+   
+    int totalItems = ViewBag.TotalItems ?? 0;
+    int pageSize = ViewBag.PageSize ?? 10;
+    int page = ViewBag.Page ?? 1;
+    string search = ViewBag.Search ?? "";
+
+    int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 }
 
-<h2>Inventory</h2>
-
+<h2>My Inventory</h2>
 
 <form method="get" class="mb-3">
-    <input name="search" value="@ViewBag.Search" class="form-control" placeholder="Search item" />
+    <input name="search" value="@search" class="form-control" placeholder="Search item" />
 </form>
 
 
@@ -29,15 +35,9 @@
         </tr>
     </thead>
     <tbody>
-        @if (Model.Count == 0)
+        @if (Model != null && Model.Count > 0)
         {
-            <tr>
-                <td colspan="5" class="text-center">No items available</td>
-            </tr>
-        }
-        else
-        {
-            @foreach (var item in Model)
+            foreach (var item in Model)
             {
                 <tr>
                     <td>@item.ItemName</td>
@@ -45,44 +45,38 @@
                     <td>@item.Price.ToString("C")</td>
                     <td>@item.DateAdded.ToString("yyyy-MM-dd")</td>
                     <td>
-                        
-                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editModal@item.Id">Edit</button>
-
-                      
+                        <!-- Delete form -->
                         <form method="post" asp-action="Delete" class="d-inline">
                             <input type="hidden" name="id" value="@item.Id" />
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</button>
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
                     </td>
                 </tr>
-
-               
-                <div class="modal fade" id="editModal@item.Id">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <form method="post" asp-action="Edit">
-                                <div class="modal-header">
-                                    <h5>Edit Item</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <input name="itemName" value="@item.ItemName" class="form-control mb-2" placeholder="Item Name" />
-                                    <input name="quantity" type="number" value="@item.Quantity" class="form-control mb-2" placeholder="Quantity" />
-                                    <input name="price" type="number" step="0.01" value="@item.Price" class="form-control" placeholder="Price" />
-                                </div>
-                                <div class="modal-footer">
-                                    <button class="btn btn-primary">Save</button>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
             }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5" class="text-center">No Items Available</td>
+            </tr>
         }
     </tbody>
 </table>
+
+
+@if (totalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(i == page ? "active" : "")">
+                    <a class="page-link" href="?page=@i&search=@search">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
 
 
 <div class="modal fade" id="addModal">
@@ -94,30 +88,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <input name="itemName" class="form-control mb-2" placeholder="Item Name" />
-                    <input name="quantity" type="number" class="form-control mb-2" placeholder="Quantity" />
-                    <input name="price" type="number" step="0.01" class="form-control" placeholder="Price" />
+                    <input name="itemName" class="form-control mb-2" placeholder="Item Name" required />
+                    <input name="quantity" type="number" class="form-control mb-2" placeholder="Quantity" required />
+                    <input name="price" type="number" step="0.01" class="form-control mb-2" placeholder="Price" required />
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Save</button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-
-
-@if (totalPages > 1)
-{
-    <nav>
-        <ul class="pagination">
-            @for (int i = 1; i <= totalPages; i++)
-            {
-                <li class="page-item @(i == ViewBag.Page ? "active" : "")">
-                    <a class="page-link" href="?page=@i&search=@ViewBag.Search">@i</a>
-                </li>
-            }
-        </ul>
-    </nav>
-}

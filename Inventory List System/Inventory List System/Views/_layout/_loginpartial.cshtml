@@ -1,0 +1,24 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject IHttpContextAccessor HttpContextAccessor
+
+@if (HttpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+{
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("Index", "Inventory")">My Inventory</a>
+    </li>
+    <li class="nav-item">
+        <form method="post" asp-controller="Account" asp-action="Logout" class="d-inline">
+            <button type="submit" class="btn btn-link nav-link" style="padding:0;">Logout (@HttpContextAccessor.HttpContext.User.Identity.Name)</button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("Login", "Account")">Login</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("Register", "Account")">Register</a>
+    </li>
+}

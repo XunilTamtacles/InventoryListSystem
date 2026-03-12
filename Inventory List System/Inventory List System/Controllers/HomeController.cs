@@ -1,32 +1,51 @@
-using System.Diagnostics;
-using Inventory_List_System.Models;
 using Microsoft.AspNetCore.Mvc;
+using Inventory_List_System.Models.Database;
+using Inventory_List_System.Models.Repositories.Inventories;
 
 namespace Inventory_List_System.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly IInventoryRepository _inventoryRepository;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IInventoryRepository inventoryRepository)
         {
-            _logger = logger;
+            _inventoryRepository = inventoryRepository;
         }
 
-        public IActionResult Index()
+       
+        public IActionResult Create()
         {
             return View();
         }
 
-        public IActionResult Privacy()
+        
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(string itemName, int quantity, decimal price)
         {
-            return View();
-        }
+            if (string.IsNullOrEmpty(itemName) || quantity <= 0 || price <= 0)
+            {
+                ModelState.AddModelError(string.Empty, "Please fill all fields with valid values.");
+                return View();
+            }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+           
+            int userId = 1;
+
+            var item = new InventoryItem
+            {
+                ItemName = itemName,
+                Quantity = quantity,
+                Price = price,
+                DateAdded = DateTime.Now,
+                UserId = userId
+            };
+
+            _inventoryRepository.AddItem(item);
+
+            
+            return RedirectToAction("Index", "Inventory");
         }
     }
 }
